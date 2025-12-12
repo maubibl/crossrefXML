@@ -10,6 +10,8 @@
     <xsl:output method="xml" indent="yes" encoding="UTF-8"/>
     <xsl:param name="currentDateTime" select="'1970-01-01T00:00:00'"/> <!-- Default value -->
     <xsl:param name="genreOverride" select="''"/> <!-- Optional: 'dissertation', 'report', 'book' (monograph), or 'coll' (edited_book) to override mods:genre -->
+    <xsl:param name="depositorName" select="'malmo:malmo'"/> <!-- Depositor name from CROSSREF_DEPOSITOR_NAME -->
+    <xsl:param name="depositorEmail" select="'depositor@example.com'"/> <!-- Depositor email from CROSSREF_EMAIL -->
 
     <xsl:template match="/">  
         <!-- Use the 'mods' prefix in the XPath -->
@@ -25,8 +27,8 @@
                 <doi_batch_id>mau<xsl:value-of select="$currentDateTime"/></doi_batch_id>
                 <timestamp> <xsl:value-of select="$currentDateTime"/></timestamp>
                 <depositor>
-                    <depositor_name>malmo:malmo</depositor_name>
-                    <email_address>aron.lindhagen@mau.se</email_address>
+                    <depositor_name><xsl:value-of select="$depositorName"/></depositor_name>
+                    <email_address><xsl:value-of select="$depositorEmail"/></email_address>
                 </depositor>
                 <registrant>
                 <xsl:choose>

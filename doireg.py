@@ -17,9 +17,16 @@ xslt = etree.parse('DiVA-CrossRef.xslt')
 # Get the current date and time in the desired format: YYYYMMDDHHMMSS000
 current_timestamp = datetime.now().strftime('%Y%m%d%H%M%S') + '000'
 
-# Pass the timestamp as a parameter to the XSLT transformation
+# Get depositor information from environment variables
+depositor_name = os.environ.get('CROSSREF_DEPOSITOR_NAME', 'malmo:malmo')
+depositor_email = os.environ.get('CROSSREF_EMAIL', 'depositor@example.com')
+
+# Pass the timestamp and depositor info as parameters to the XSLT transformation
 transform = etree.XSLT(xslt)
-result = transform(xml, currentDateTime=etree.XSLT.strparam(current_timestamp))
+result = transform(xml, 
+                   currentDateTime=etree.XSLT.strparam(current_timestamp),
+                   depositorName=etree.XSLT.strparam(depositor_name),
+                   depositorEmail=etree.XSLT.strparam(depositor_email))
 
 # Save the transformed XML to a file
 transformed_filename = 'doireg.xml'
