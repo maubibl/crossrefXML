@@ -606,40 +606,24 @@ Behavior:
 
 ```
 .
-├── README.md                    # This file (renamed from doireg_pipeline_overview.txt)
+├── README.md                    # Project documentation
 ├── GITHUB_SECURITY.md           # Credential management guide
 ├── requirements.txt             # Python dependencies
-├── .env.example                 # Environment variable template
-├── .env                         # Your credentials (not committed)
+├── .env.example                 # Environment variable template (copy to .env locally)
 ├── .gitignore                   # Git exclusions
-│
 ├── DiVA-CrossRef.xslt           # MODS → Crossref XML transformer
-├── DiVA-CrossRef_book.xslt      # Book-specific variant
-│
-├── doireg.py                    # Single-publication pipeline
+├── doireg.py                    # Single-publication pipeline (applies XSLT)
 ├── csv_reg.py                   # CSV batch pipeline orchestrator
 ├── csv-crossref.py              # CSV → Crossref XML generator
-│
 ├── doiref.py                    # APA reference extractor
 ├── doiref_nonapa.py             # Non-APA reference extractor
 ├── parsing_helpers.py           # Shared parsing utilities
 ├── debug_utils.py               # Debug file management
-│
-├── pdf_to_txt.py                # PDF extraction utility
 ├── fix_dashed_refs.py           # Reference repair tool
-│
-├── DOI.csv                      # Input CSV for batch processing
-├── export.xml                   # DiVA MODS export (input)
-├── crossref_output.xml          # Generated Crossref XML (output)
-├── crossref-upload-tool.jar     # Crossref upload client
-│
-├── debug/                       # Debug output directory
-│   ├── .counter                 # Debug sequence counter
-│   ├── .map.json                # Canonical filename mapping
-│   └── 001_*.txt                # Numbered debug files
-│
-├── backup/                      # Backup scripts and data
-└── __pycache__/                 # Python bytecode cache
+├── pdf_to_txt/                  # PDF extraction utility
+│   ├── README.md
+│   └── pdf_to_txt.py
+└── (local only, untracked) .env # Your credentials, not in git
 ```
 
 ## Contributing
