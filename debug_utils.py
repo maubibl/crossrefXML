@@ -7,6 +7,17 @@ _COUNTER_FILE = '.counter'
 
 DEBUG_DIR = os.environ.get('DOIREF_DEBUG_DIR', 'debug')
 
+# Global debug toggle: disabled by default unless explicitly enabled via env
+# Set DOIREF_DEBUG to one of: 1, true, yes, on (case-insensitive) to enable
+_DEBUG_ENABLED = str(os.environ.get('DOIREF_DEBUG', '')).lower() in {'1', 'true', 'yes', 'on'}
+
+def set_debug_enabled(enabled: bool):
+    global _DEBUG_ENABLED
+    _DEBUG_ENABLED = bool(enabled)
+
+def is_debug_enabled() -> bool:
+    return bool(_DEBUG_ENABLED)
+
 # In-memory cache and lock for thread-safety
 _lock = threading.Lock()
 _mapping = None  # lazy-loaded dict: base_name -> canonical_name
@@ -24,6 +35,11 @@ def _ensure_debug_dir():
 def _load_state():
     global _mapping, _counter
     if _mapping is not None and _counter is not None:
+        return
+    # Only prepare state files when debug is enabled
+    if not _DEBUG_ENABLED:
+        _mapping = {}
+        _counter = 0
         return
     _ensure_debug_dir()
     map_path = os.path.join(DEBUG_DIR, _MAP_FILE)
@@ -47,6 +63,8 @@ def _load_state():
 
 
 def _save_state():
+    if not _DEBUG_ENABLED:
+        return
     _ensure_debug_dir()
     map_path = os.path.join(DEBUG_DIR, _MAP_FILE)
     counter_path = os.path.join(DEBUG_DIR, _COUNTER_FILE)
@@ -97,6 +115,8 @@ def _migrate_existing():
     numeric prefixes if present, and registers them in the mapping while
     renaming them to the canonical form if necessary.
     """
+    if not _DEBUG_ENABLED:
+        return
     _ensure_debug_dir()
     global _mapping, _counter
     with _lock:
@@ -155,6 +175,8 @@ def write_debug(name: str, content, encoding='utf-8', canonicalize=True):
     zero-padded numeric prefix and persisted in an internal mapping so
     subsequent calls that reference the base name can find the same file.
     """
+    if not _DEBUG_ENABLED:
+        return
     _ensure_debug_dir()
     base = os.path.basename(name)
     try:
@@ -195,7 +217,7 @@ def debug_path(name: str) -> str:
     return os.path.join(DEBUG_DIR, base)
 
 
-# Run migration once on import to canonicalize any existing debug files.
+# Run migration once on import to canonicalize any existing debug files (only if enabled).
 try:
     _migrate_existing()
 except Exception:
@@ -214,6 +236,8 @@ def clear_debug_txt():
     counter files) to avoid disturbing canonicalization logic. Non-fatal
     on any error.
     """
+    if not _DEBUG_ENABLED:
+        return
     _ensure_debug_dir()
     try:
         for name in os.listdir(DEBUG_DIR):
@@ -249,6 +273,8 @@ def reset_debug_sequence(remove_prefixed_files=False):
     optional and defaults to False to avoid accidental data loss.
     """
     global _mapping, _counter
+    if not _DEBUG_ENABLED:
+        return
     _ensure_debug_dir()
     with _lock:
         # Remove persisted state files

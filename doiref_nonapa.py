@@ -46,7 +46,7 @@ certifi = None
 # --- CONFIGURATION ---
 use_local_file = False  # Set to True to use a local PDF file, False to use URL
 local_file_path = "sssf-vol-16-2025-p177-211-haklietal.pdf"
-url = "https://mau.diva-portal.org/smash/get/diva2:1754256/FULLTEXT01.pdf"
+url = "https://mau.diva-portal.org/smash/get/diva2:1658044/FULLTEXT02.pdf"
 headers = {"User-Agent": "Mozilla/5.0"}
 use_txt_file = False  # Set to True to use a TXT file instead of PDF
 txt_file_path = "References_extracted.txt"
@@ -118,9 +118,9 @@ parser.add_argument(
 parser.add_argument(
     '--extractor',
     choices=['pymupdf', 'pdfminer'],
-    default='pymupdf',
+    default='pdfminer',
     dest='extractor',
-    help='PDF text extraction method: pymupdf (default) or pdfminer',
+    help='PDF text extraction method: pymupdf or pdfminer (auto-selected by reference type if omitted)',
 )
 
 # Optional: mirror the simplified non-numbered joining behavior from `doiref.py`.

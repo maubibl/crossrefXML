@@ -1,6 +1,6 @@
 import os
 import re
-from debug_utils import write_debug
+from debug_utils import write_debug, is_debug_enabled
 
 
 # General Prop./SOU helpers
@@ -841,17 +841,18 @@ def hyphen_join_fixed_point(input_lines, audit_fp=None, max_iter_env='DOIREF_HYP
             else:
                 out.append(curr)
                 i += 1
-        # write debug snapshot for this iteration
+        # write debug snapshot for this iteration (only when debugging enabled)
         try:
             write_debug(f'debug_hyphen_iter{iter_n}.txt', [f'ITERATION: {iter_n}'] + out)
         except Exception:
-            try:
-                with open(f'debug_hyphen_iter{iter_n}.txt', 'w', encoding='utf-8') as df:
-                    df.write(f'ITERATION: {iter_n}\n')
-                    for r in out:
-                        df.write(r + '\n')
-            except Exception:
-                pass
+            if is_debug_enabled():
+                try:
+                    with open(f'debug_hyphen_iter{iter_n}.txt', 'w', encoding='utf-8') as df:
+                        df.write(f'ITERATION: {iter_n}\n')
+                        for r in out:
+                            df.write(r + '\n')
+                except Exception:
+                    pass
 
         if out == prev or iter_n >= max_iter:
             return out
@@ -1278,9 +1279,10 @@ def conservative_doi_reattach(frags):
         write_debug('conservative_reattach_trace.txt', trace)
     except Exception:
         try:
-            with open('debug_conservative_reattach_trace.txt', 'w', encoding='utf-8') as df:
-                for t in trace:
-                    df.write(t + '\n')
+            if is_debug_enabled():
+                with open('debug_conservative_reattach_trace.txt', 'w', encoding='utf-8') as df:
+                    for t in trace:
+                        df.write(t + '\n')
         except Exception:
             pass
     return out
@@ -1378,9 +1380,10 @@ def conservative_doi_reattach_aggressive(frags):
         write_debug('conservative_reattach_aggressive_trace.txt', trace)
     except Exception:
         try:
-            with open('debug_conservative_reattach_aggressive_trace.txt', 'w', encoding='utf-8') as df:
-                for t in trace:
-                    df.write(t + '\n')
+            if is_debug_enabled():
+                with open('debug_conservative_reattach_aggressive_trace.txt', 'w', encoding='utf-8') as df:
+                    for t in trace:
+                        df.write(t + '\n')
         except Exception:
             pass
     return out

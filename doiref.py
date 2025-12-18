@@ -25,7 +25,7 @@ import re as _re  # local alias to avoid shadowing
 strip_pattern = _re.compile(r'^\s+|\s+$')
 use_local_file = False  # Set to True to use a local PDF file, False to use URL
 local_file_path = "PDF.pdf"
-url = "https://mau.diva-portal.org/smash/get/diva2:1754256/FULLTEXT01.pdf"
+url = "https://mau.diva-portal.org/smash/get/diva2:1922011/FULLTEXT02.pdf"
 headers = {"User-Agent": "Mozilla/5.0"}
 
 # TXT-mode defaults. The script prefers URL/PDF mode by default; callers and
@@ -133,6 +133,18 @@ parser.add_argument(
     help='PDF text extraction method: pymupdf or pdfminer (default)',
 )
 args = parser.parse_args()
+
+# Smart extractor selection based on reference type (APA-style -> pymupdf)
+# If the user explicitly provided --extractor on the CLI, respect that choice.
+# Otherwise, default to pymupdf for APA-style references which handle
+# formatted author/year patterns better. Allow override via DOIREF_EXTRACTOR env var.
+if not sys.argv or '--extractor' not in sys.argv:
+    # CLI did not explicitly set --extractor, so use smart default
+    smart_extractor = os.environ.get('DOIREF_EXTRACTOR', 'pymupdf')  # APA default
+    args.extractor = smart_extractor
+    if args.url:
+        # Log choice for debugging (only when a URL is provided)
+        print(f"[Auto-selected extractor: {smart_extractor} for APA-style references]", file=sys.stderr)
 
 if args.url and args.output_filename:
     url = args.url
@@ -368,6 +380,83 @@ if not getattr(args, 'no_numbered_fallback', False):
     if numbered_style == 'bare' and args.until_eof:
         trigger_threshold = 30
     if num_count >= trigger_threshold:
+        # Numbered references detected! Re-extract with pymupdf if we used pdfminer.
+        # pymupdf works better for numbered/structured reference lists.
+        if args.extractor == 'pdfminer' and not use_txt_file:
+            print(f"[Numbered references detected ({num_count} items, style={numbered_style})]", file=sys.stderr)
+            print(f"[Re-extracting with pymupdf for better numbered-list handling...]", file=sys.stderr)
+            try:
+                # Re-fetch full text with pymupdf
+                full_text = get_full_text(
+                    source=args.url or url,
+                    use_local_file=use_local_file,
+                    local_file_path=local_file_path,
+                    use_txt_file=False,  # Never use TXT for re-extraction
+                    txt_file_path=txt_file_path,
+                    headers=headers,
+                    verify='combined_ca.pem',
+                    extractor='pymupdf',
+                )
+                # Re-run preprocessing with pymupdf extraction
+                lp = load_and_preprocess(
+                    source=args.url or url,
+                    use_local_file=use_local_file,
+                    local_file_path=local_file_path,
+                    use_txt_file=False,
+                    txt_file_path=txt_file_path,
+                    headers=headers,
+                    verify='combined_ca.pem',
+                    until_eof=args.until_eof,
+                    stop_at_allcaps=False,
+                    require_heading=not use_txt_file,
+                    audit_fp=audit_fp,
+                    preloaded_full_text=full_text,
+                    extractor='pymupdf',
+                )
+                # Update lines and references_text with pymupdf extraction
+                full_text = lp.get('full_text')
+                references_text = lp.get('references_text')
+                raw_lines = lp.get('raw_lines', references_text.splitlines() if references_text else [])
+                lines = lp.get('lines', [])
+                
+                # Re-save the extracted reference section
+                try:
+                    with open('references_extracted.txt', 'w', encoding='utf-8') as f:
+                        f.write(references_text or '')
+                except Exception:
+                    pass
+                
+                # Rebuild count_lines for the new extraction
+                try:
+                    count_lines = list(lines)
+                except Exception:
+                    count_lines = lines[:]
+                
+                # Re-detect numbered patterns with new extraction
+                bracket_count = sum(1 for ln in count_lines if re_bracket.match(ln))
+                paren_count = sum(1 for ln in count_lines if re_paren.match(ln))
+                bare_count = sum(1 for ln in count_lines if re_bare.match(ln))
+                
+                if bracket_count >= 15:
+                    numbered_style = 'bracket'
+                    numbered_pattern = re.compile(r'^\[\s*\d{1,3}\.??\s*\]\s*')
+                    num_count = bracket_count
+                elif paren_count >= 15:
+                    numbered_style = 'paren'
+                    numbered_pattern = re.compile(r'^\(\s*\d{1,3}\.??\s*\)\s*')
+                    num_count = paren_count
+                else:
+                    bare_threshold = 30 if args.until_eof else 10
+                    if bare_count >= bare_threshold:
+                        numbered_style = 'bare'
+                        numbered_pattern = re.compile(r'^\d{1,3}\.\s*')
+                        num_count = bare_count
+                
+                print(f"[Re-extraction complete: {num_count} numbered items detected with pymupdf]", file=sys.stderr)
+            except Exception as e:
+                print(f"[Warning: Re-extraction with pymupdf failed: {e}]", file=sys.stderr)
+                print(f"[Continuing with original pdfminer extraction...]", file=sys.stderr)
+        
         try:
             local_max_iter = int(os.environ.get('DOIREF_MAX_ITER', '10'))
         except Exception:
