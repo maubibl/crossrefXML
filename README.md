@@ -40,10 +40,12 @@ This pipeline automates the process of:
 - ✅ **Intelligent reference parsing**: APA-style with fallback heuristics
 - ✅ **Batch processing**: CSV-based workflows for bulk deposits
 - ✅ **Metadata enrichment**: Automatic institutional IDs (ROR/ISNI/Wikidata)
-- ✅ **Debug capabilities**: Numbered debug files with canonical naming
+- ✅ **Debug capabilities**: Numbered debug files with canonical naming (controlled by DOIREF_DEBUG)
 - ✅ **Secure credential management**: Environment variable support via `.env`
 - ✅ **XSLT transformation**: MODS → Crossref XML with namespace handling
 - ✅ **Multi-backend PDF extraction**: PyMuPDF, pdfminer, pdftotext fallback
+- ✅ **Smart extractor selection**: Automatic PDF extractor choice based on reference type
+- ✅ **Adaptive re-extraction**: Switches extractors when numbered references detected
 
 ## Prerequisites
 
@@ -147,6 +149,8 @@ CROSSREF_USERNAME=test python csv_reg.py
 | `DOIREF_TXT_PATH` | Path when TXT mode enabled | - |
 | `DOIREF_MAX_ITER` | Max numbered-list join iterations | `10` |
 | `DOIREF_DEBUG_DIR` | Custom debug output directory | `debug/` |
+| `DOIREF_DEBUG` | Enable debug file creation (1/true/yes/on) | `False` |
+| `DOIREF_EXTRACTOR` | Force specific PDF extractor (pymupdf/pdfminer) | auto-selected |
 | `CSV_SAVE_REFS_TXT` | Save references in CSV pipeline | `True` |
 
 ## Quick Start
