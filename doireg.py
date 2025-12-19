@@ -21,12 +21,18 @@ current_timestamp = datetime.now().strftime('%Y%m%d%H%M%S') + '000'
 depositor_name = os.environ.get('CROSSREF_DEPOSITOR_NAME', 'malmo:malmo')
 depositor_email = os.environ.get('CROSSREF_EMAIL', 'depositor@example.com')
 
-# Pass the timestamp and depositor info as parameters to the XSLT transformation
+# Check for command-line argument for genre override
+genre_override = ''
+if len(sys.argv) > 1:
+    genre_override = sys.argv[1]
+
+# Pass the timestamp, depositor info, and genre override as parameters to the XSLT transformation
 transform = etree.XSLT(xslt)
 result = transform(xml, 
                    currentDateTime=etree.XSLT.strparam(current_timestamp),
                    depositorName=etree.XSLT.strparam(depositor_name),
-                   depositorEmail=etree.XSLT.strparam(depositor_email))
+                   depositorEmail=etree.XSLT.strparam(depositor_email),
+                   genreOverride=etree.XSLT.strparam(genre_override))
 
 # Save the transformed XML to a file
 transformed_filename = 'doireg.xml'
@@ -36,6 +42,8 @@ with open(transformed_filename, 'wb') as f:
 
 # Print success message
 print(f"Transformation completed successfully! File saved as {transformed_filename}")
+if genre_override:
+    print(f"Forced doc type: {genre_override}")
 
 # Upload the file to CrossRef using crossref-upload-tool.jar
 username = os.environ.get('CROSSREF_USERNAME')
