@@ -23,6 +23,7 @@ from parsing_helpers import (
     line_ends_with_comma_or_initial,
     line_ends_with_conjunction,
     load_and_preprocess,
+    fix_diaeresis_errors,
 )
 from debug_utils import write_debug, clear_debug_txt, reset_debug_sequence
 
@@ -46,7 +47,7 @@ certifi = None
 # --- CONFIGURATION ---
 use_local_file = False  # Set to True to use a local PDF file, False to use URL
 local_file_path = "sssf-vol-16-2025-p177-211-haklietal.pdf"
-url = "https://mau.diva-portal.org/smash/get/diva2:1658044/FULLTEXT02.pdf"
+url = "https://mau.diva-portal.org/smash/get/diva2:1658049/FULLTEXT01.pdf"
 headers = {"User-Agent": "Mozilla/5.0"}
 use_txt_file = False  # Set to True to use a TXT file instead of PDF
 txt_file_path = "References_extracted.txt"
@@ -1293,6 +1294,8 @@ if DEBUG:
 
 with open(output_filename, "w") as f:
     for ref in final_references:
+        # Apply diaeresis error fixes as a final step
+        ref = fix_diaeresis_errors(ref)
         f.write(ref + "\n")
 
 if audit_fp:

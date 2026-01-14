@@ -1898,3 +1898,32 @@ def load_and_preprocess(
         # behavior).
         'lines': norm_lines,
     }
+
+
+def fix_diaeresis_errors(text: str) -> str:
+    """Fix common diaeresis errors in text (case-insensitive).
+    
+    Replaces:
+      - '¨o' or '¨O' with 'ö' or 'Ö'
+      - '¨a' or '¨A' with 'ä' or 'Ä'
+      - '¨u' or '¨U' with 'ü' or 'Ü'
+    
+    Examples:
+      - 'f¨or' -> 'för'
+      - '¨Uber' -> 'Über'
+      - 'M¨unchen' -> 'München'
+    """
+    if not text:
+        return text
+    
+    # Replace lowercase variants
+    text = text.replace('¨o', 'ö')
+    text = text.replace('¨a', 'ä')
+    text = text.replace('¨u', 'ü')
+    
+    # Replace uppercase variants
+    text = text.replace('¨O', 'Ö')
+    text = text.replace('¨A', 'Ä')
+    text = text.replace('¨U', 'Ü')
+    
+    return text

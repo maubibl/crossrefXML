@@ -18,6 +18,7 @@ from parsing_helpers import (  # noqa: E402
     starts_with_initials_then_parenthesized_year_allowing_authors,
     line_ends_with_comma_or_initial,
     line_ends_with_conjunction,
+    fix_diaeresis_errors,
 )
 # Precompiled whitespace strip pattern (used when --strip-numbers is requested)
 # Keep conservative: only remove the first occurrence per-line when used.
@@ -25,7 +26,7 @@ import re as _re  # local alias to avoid shadowing
 strip_pattern = _re.compile(r'^\s+|\s+$')
 use_local_file = False  # Set to True to use a local PDF file, False to use URL
 local_file_path = "PDF.pdf"
-url = "https://mau.diva-portal.org/smash/get/diva2:1922011/FULLTEXT02.pdf"
+url = "https://mau.diva-portal.org/smash/get/diva2:1641892/FULLTEXT01.pdf"
 headers = {"User-Agent": "Mozilla/5.0"}
 
 # TXT-mode defaults. The script prefers URL/PDF mode by default; callers and
@@ -140,7 +141,7 @@ args = parser.parse_args()
 # formatted author/year patterns better. Allow override via DOIREF_EXTRACTOR env var.
 if not sys.argv or '--extractor' not in sys.argv:
     # CLI did not explicitly set --extractor, so use smart default
-    smart_extractor = os.environ.get('DOIREF_EXTRACTOR', 'pymupdf')  # APA default
+    smart_extractor = os.environ.get('DOIREF_EXTRACTOR', 'pdfminer')  # APA default
     args.extractor = smart_extractor
     if args.url:
         # Log choice for debugging (only when a URL is provided)
@@ -1286,6 +1287,8 @@ if lines:
     # Optionally overwrite the public output file with the fully-merged results
     with open(output_filename, 'w', encoding='utf-8') as f:
         for ref in final_refs2:
+            # Apply diaeresis error fixes as a final step
+            ref = fix_diaeresis_errors(ref)
             if STRIP_NUMBERS:
                 number_prefix_re = re.compile(r'^\s*(?:\d+\.\s*|\[\d+\]\s*|\d+\s+)')
                 cleaned = number_prefix_re.sub('', ref, count=1)
